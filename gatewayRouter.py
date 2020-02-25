@@ -42,12 +42,12 @@ class Producer(object):
 
     def onInterest(self, prefix, interest, transport, registeredPrefixId):
         interestName = interest.getName()
-        incomingFace = str(interest.getIncomingFaceId())
         interestParams = str(interest.getApplicationParameters())
         addPrefixes = interestParams.split("|")
 
-        for i in range (0,len(addPrefixes)):
-            os.system("nfdc route add " + str(addPrefixes[i]) + " " + incomingFace)
+        for i in range (0,len(addPrefixes)-1):
+            print addPrefixes[i]
+            os.system("nfdc route add " + str(addPrefixes[i]) + " udp://" + addPrefixes[len(addPrefixes)-1])
             os.system("nlsrc advertise "+ str(addPrefixes[i]))
 
         data = Data(interestName)
@@ -61,7 +61,6 @@ class Producer(object):
         transport.send(data.wireEncode().toBuffer())
 
         print "Replied to: %s" % interestName.toUri()
-        print msg
 
     def onRegisterFailed(self, prefix):
         print "Register failed for prefix", prefix.toUri()

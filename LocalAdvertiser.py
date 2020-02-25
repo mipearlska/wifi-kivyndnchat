@@ -25,7 +25,7 @@ class Producer(object):
         # Create a connection to the local forwarder over a Unix socket
         self.gatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02" #get gateway IP of gateway router
         os.system("nfdc face create remote udp://"+self.gatewayIP)
-        os.system("nfdc route add /ndnchat/register udp://"+self.gatewayIP)
+        # os.system("nfdc route add /ndnchat/register udp://"+self.gatewayIP)
         face = Face()
 
         prefix = Name(namespace)
@@ -45,19 +45,20 @@ class Producer(object):
             # check gatewayIP change. If change:
             # Add route from UE to new gateway for each prefix in local prefix list
             # Concat prefix in the list to the form "prefix1|prefix2", then call interestSender to send them to new gateway router
-            gatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02"
-            if gatewayIP != self.gatewayIP:
-                os.system("nfdc face create remote udp://"+gatewayIP)
-                os.system("nfdc route add /ndnchat/register udp://"+self.gatewayIP)
+            newgatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02"
+            if newgatewayIP != self.gatewayIP:
+                os.system("nfdc face create remote udp://"+newgatewayIP)
+                os.system("nfdc route add /ndnchat/register udp://"+newgatewayIP)
                 concatPrefixesList = ""
                 for i in range (0,len(self.prefixesList)):
-                    os.system("nfdc route add " + str(self.prefixesList[i]) + " udp://" + gatewayIP)
+                    os.system("nfdc route add " + str(self.prefixesList[i]) + " udp://" + newgatewayIP)
                     if i == len(self.prefixesList) - 1:
                         concatPrefixesList = concatPrefixesList + self.prefixesList[i]
                     else:
                         concatPrefixesList = concatPrefixesList + self.prefixesList[i] + "|"
+                concatPrefixesList = concatPrefixesList + "|" + newgatewayIP
                 subprocess.call(["python", "interestSender.py", "-u /ndnchat/register", "-p"+concatPrefixesList])
-                self.gatewayIP = gatewayIP
+                self.gatewayIP = newgatewayIP
 
             face.processEvents()
             time.sleep(0.01)
@@ -67,15 +68,16 @@ class Producer(object):
         interestName = interest.getName()
         interestParams = str(interest.getApplicationParameters())
         addPrefixes = interestParams.split("|")
-
+        interestParams = interestParams + "|"+self.gatewayIP
         # For each Prefix recieved save it in local array
         # Add route for that prefix from User to gateway router
         for i in range (0,len(addPrefixes)):
+            print addPrefixes[i]
             self.prefixesList.append(str(addPrefixes[i]))
             os.system("nfdc route add " + str(addPrefixes[i]) + " udp://" + self.gatewayIP)
 
         # Send prefixesList to gateway router
-        subprocess.call(["python", "interestSender.py", "-u /ndnchat/register", "-p"+interestParams])
+        subprocess.call(["python", "interestSender.py", "-u /ndnchat/register", "-p "+interestParams])
 
         data = Data(interestName)
         data.setContent("Register Successful")
@@ -88,7 +90,6 @@ class Producer(object):
         transport.send(data.wireEncode().toBuffer())
 
         print "Replied to: %s" % interestName.toUri()
-        print msg
         
         self.isDone = True
 
