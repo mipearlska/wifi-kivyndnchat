@@ -25,7 +25,7 @@ class Producer(object):
         # Create a connection to the local forwarder over a Unix socket
         self.gatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02" #get gateway IP of gateway router
         os.system("nfdc face create remote udp://"+self.gatewayIP)
-        # os.system("nfdc route add /ndnchat/register udp://"+self.gatewayIP)
+        os.system("nfdc route add /ndnchat/register udp://"+self.gatewayIP)
         face = Face()
 
         prefix = Name(namespace)
