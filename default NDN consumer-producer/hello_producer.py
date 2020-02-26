@@ -66,6 +66,7 @@ class Producer(object):
 
     def onInterest(self, prefix, interest, transport, registeredPrefixId):
         interestName = interest.getName()
+        print "Params: "+ str(interest.getApplicationParameters())
 
         data = Data(interestName)
         data.setContent("Hello, " + interestName.toUri())
