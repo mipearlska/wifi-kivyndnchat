@@ -465,7 +465,7 @@ class Chat(object):
             #     data from an interest sent before it changed.
             # Use getattr because "from" is a reserved keyword.
             if (content.type == chatbuf_pb2.ChatMessage.CHAT and
-                 not self._isRecoverySyncState and
+                 #not self._isRecoverySyncState and
                  getattr(content, "from") != self._screenName):
                 self._messagelist.add_widget(List.TwoLineListItem(text=content.data,
             secondary_text=getattr(content, "from"),
