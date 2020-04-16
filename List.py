@@ -159,6 +159,7 @@ Config.set('graphics', 'default_font', ["font",".font.ttf",".font.ttf",".font.tt
 #LabelBase.register(name="OpenSans", fn_regular="Roboto-Regular.ttf")
 Builder.load_string('''
 #:import m_res material_resources
+#:import get_color_from_hex __main__.get_color_from_hex
 <MDList>
     cols: 1
     size_hint_y: None
@@ -170,13 +171,23 @@ Builder.load_string('''
     canvas:
         Color:
             rgba: self.theme_cls.divider_color if root.divider is not None else (0, 0, 0, 0)
+            #rgba: (1, 0, 0, 1)
         Line:
             points: (root.x ,root.y, root.x+self.width, root.y)\
                     if root.divider == 'Full' else\
                     (root.x+root._txt_left_pad, root.y,\
                     root.x+self.width-root._txt_left_pad-root._txt_right_pad,\
                     root.y)
+        # Rectangle:
+        #     pos: self.pos
+        #     size: self.size
     BoxLayout:
+        # canvas:
+        #     Color:
+        #         rgba: get_color_from_hex("#0066cc")
+        #     Rectangle:
+        #         pos: self.pos
+        #         size: self.size
         id: _text_container
         orientation: 'vertical'
         pos: root.pos
@@ -317,7 +328,7 @@ class BaseListItem(ThemableBehavior, RectangularRippleBehavior,
                             'Headline', 'Display1', 'Display2', 'Display3',
                             'Display4', 'Button', 'Icon'])
     
-    theme_text_color = StringProperty('Primary',allownone=True)
+    theme_text_color = StringProperty('Custom',allownone=True)
     ''' Theme text color for primary text '''
 
     secondary_text = StringProperty()
@@ -335,7 +346,7 @@ class BaseListItem(ThemableBehavior, RectangularRippleBehavior,
     ''' Text color used for secondary text if secondary_theme_text_color 
     is set to 'Custom' '''
     
-    secondary_theme_text_color = StringProperty('Secondary',allownone=True)
+    secondary_theme_text_color = StringProperty('Custom',allownone=True)
     ''' Theme text color for secondary primary text '''
     
     secondary_font_style = OptionProperty(

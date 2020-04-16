@@ -5,6 +5,7 @@ import traceback
 import random
 import os
 import subprocess
+import socket
 
 from pyndn import Name
 from pyndn import Data
@@ -12,7 +13,10 @@ from pyndn import Face
 from pyndn.security import KeyChain
 
 
-
+def get_device_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8",80))
+    return str(s.getsockname()[0])
 
 class Producer(object):
     def __init__(self):
@@ -45,20 +49,26 @@ class Producer(object):
             # check gatewayIP change. If change:
             # Add route from UE to new gateway for each prefix in local prefix list
             # Concat prefix in the list to the form "prefix1|prefix2", then call interestSender to send them to new gateway router
-            newgatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02"
-            if newgatewayIP != self.gatewayIP:
-                os.system("nfdc face create remote udp://"+newgatewayIP)
-                os.system("nfdc route add /ndnchat/register udp://"+newgatewayIP)
-                concatPrefixesList = ""
-                for i in range (0,len(self.prefixesList)):
-                    os.system("nfdc route add " + str(self.prefixesList[i]) + " udp://" + newgatewayIP)
-                    if i == len(self.prefixesList) - 1:
-                        concatPrefixesList = concatPrefixesList + self.prefixesList[i]
-                    else:
-                        concatPrefixesList = concatPrefixesList + self.prefixesList[i] + "|"
-                concatPrefixesList = concatPrefixesList + "|" + newgatewayIP
-                subprocess.call(["python", "interestSender.py", "-u /ndnchat/register", "-p"+concatPrefixesList])
-                self.gatewayIP = newgatewayIP
+            try:
+                newgatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02"
+                if newgatewayIP != self.gatewayIP:
+                    print "Changes in network detected, attempt re-advertising prefixes"
+                    os.system("nfdc face create remote udp://"+newgatewayIP)
+                    os.system("nfdc route add /ndnchat/register udp://"+newgatewayIP)
+                    concatPrefixesList = ""
+                    for i in range (0,len(self.prefixesList)):
+                        os.system("nfdc route add " + str(self.prefixesList[i]) + " udp://" + newgatewayIP)
+                        if i == len(self.prefixesList) - 1:
+                            concatPrefixesList = concatPrefixesList + self.prefixesList[i]
+                        else:
+                            concatPrefixesList = concatPrefixesList + self.prefixesList[i] + "|"
+                    concatPrefixesList = concatPrefixesList + "|" + get_device_ip()
+                    
+                    subprocess.call(["python", "interestSender.py", "-u /ndnchat/register", "-p"+concatPrefixesList])
+                    self.gatewayIP = newgatewayIP
+            except IndexError:
+                print "Lost Internet Connection"
+                self.gatewayIP = ""
 
             face.processEvents()
             time.sleep(0.01)
@@ -68,7 +78,7 @@ class Producer(object):
         interestName = interest.getName()
         interestParams = str(interest.getApplicationParameters())
         addPrefixes = interestParams.split("|")
-        interestParams = interestParams + "|"+self.gatewayIP
+        interestParams = interestParams + "|"+get_device_ip()
         # For each Prefix recieved save it in local array
         # Add route for that prefix from User to gateway router
         for i in range (0,len(addPrefixes)):
@@ -89,9 +99,9 @@ class Producer(object):
 
         transport.send(data.wireEncode().toBuffer())
 
-        print "Replied to: %s" % interestName.toUri()
+        print "Sent advertisement to gateway router"
         
-        self.isDone = True
+        #self.isDone = True
 
 
     def onRegisterFailed(self, prefix):

@@ -47,10 +47,9 @@ class Producer(object):
 
         for i in range (0,len(addPrefixes)-1):
             print addPrefixes[i]
-            os.system("nfdc route add " + str(addPrefixes[i]) + " udp://" + addPrefixes[len(addPrefixes)-1])
-            os.system("nlsrc advertise "+ str(addPrefixes[i]))
-        
-        
+            #os.system("nfdc route add " + str(addPrefixes[i]) + " udp://" + addPrefixes[len(addPrefixes)-1])
+            #os.system("nlsrc advertise "+ str(addPrefixes[i]))
+
         data = Data(interestName)
         data.setContent("Register Successful")
 
@@ -62,7 +61,6 @@ class Producer(object):
         transport.send(data.wireEncode().toBuffer())
 
         print "Replied to: %s" % interestName.toUri()
-        os.system("nfdc cs erase /ndnchat/register")
 
     def onRegisterFailed(self, prefix):
         print "Register failed for prefix", prefix.toUri()

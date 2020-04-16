@@ -51,6 +51,8 @@ class Consumer(object):
         print str(self.host) + " recieved prefixes"
         del self.outstanding[name.toUri()]
 
+        os.system("nfdc cs erase " + str(name))
+
         self.isDone = True
 
     def _onTimeout(self, interest):
