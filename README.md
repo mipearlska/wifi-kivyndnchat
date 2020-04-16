@@ -1,1 +1,1 @@
-# KivyMD NDNChat with Wifi auto prefix registration
+# KivyMD NDNChat with Wifi auto prefix registration over NDN gateway router
