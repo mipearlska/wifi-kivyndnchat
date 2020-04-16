@@ -1,1 +1,1 @@
-# ndn Chronochat (file transfer extended + KivyUI)
+# KivyMD NDNChat with Wifi auto prefix registration (file transfer extended + KivyUI)
