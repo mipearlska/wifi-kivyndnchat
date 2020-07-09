@@ -31,7 +31,7 @@ class Producer(object):
         self.gatewayIP = os.popen('ip route | grep default').read().split(" ")[2] #get gateway IP of gateway router
         os.system("ndn-autoconfig") #perform ndn-autoconfig create face to gateway router
         self.gatewayFace = os.popen('nfdc route list | grep localhost/nfd').read().split(" ")[1][8:]
-        os.system("nfdc route add /ndnchat/register udp://"+self.gatewayFace)
+        os.system("nfdc route add /ndnchat/register "+self.gatewayFace)
         face = Face()
 
         prefix = Name(namespace)
