@@ -24,12 +24,14 @@ class Producer(object):
         self.isDone = False
         self.prefixesList = []
         self.gatewayIP = "gatewayIP"
+        self.gatewayFace = 0
 
     def run(self, namespace):
         # Create a connection to the local forwarder over a Unix socket
-        self.gatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02" #get gateway IP of gateway router
-        os.system("nfdc face create remote udp://"+self.gatewayIP)
-        os.system("nfdc route add /ndnchat/register udp://"+self.gatewayIP)
+        self.gatewayIP = os.popen('ip route | grep default').read().split(" ")[2] #get gateway IP of gateway router
+        os.system("ndn-autoconfig") #perform ndn-autoconfig create face to gateway router
+        self.gatewayFace = os.popen('nfdc route list | grep localhost/nfd').read().split(" ")[1][8:]
+        os.system("nfdc route add /ndnchat/register udp://"+self.gatewayFace)
         face = Face()
 
         prefix = Name(namespace)
@@ -47,17 +49,19 @@ class Producer(object):
         # prevent the Producer from using 100% of the CPU.
         while not self.isDone:
             # check gatewayIP change. If change:
-            # Add route from UE to new gateway for each prefix in local prefix list
+            # Delete old gatewayFace, add route from UE to new gateway for each prefix in local prefix list
             # Concat prefix in the list to the form "prefix1|prefix2", then call interestSender to send them to new gateway router
             try:
-                newgatewayIP = os.popen('ip route | grep default').read().split(" ")[2]+"02"
+                newgatewayIP = os.popen('ip route | grep default').read().split(" ")[2]
                 if newgatewayIP != self.gatewayIP:
+                    os.system("nfdc face destroy "+self.gatewayFace)
                     print "Changes in network detected, attempt re-advertising prefixes"
-                    os.system("nfdc face create remote udp://"+newgatewayIP)
-                    os.system("nfdc route add /ndnchat/register udp://"+newgatewayIP)
+                    os.system("ndn-autoconfig")
+                    self.gatewayFace = os.popen('nfdc route list | grep localhost/nfd').read().split(" ")[1][8:]
+                    os.system("nfdc route add /ndnchat/register "+self.gatewayFace)
                     concatPrefixesList = ""
                     for i in range (0,len(self.prefixesList)):
-                        os.system("nfdc route add " + str(self.prefixesList[i]) + " udp://" + newgatewayIP)
+                        os.system("nfdc route add " + str(self.prefixesList[i]) + " " + self.gatewayFace)
                         if i == len(self.prefixesList) - 1:
                             concatPrefixesList = concatPrefixesList + self.prefixesList[i]
                         else:
@@ -84,7 +88,7 @@ class Producer(object):
         for i in range (0,len(addPrefixes)):
             print addPrefixes[i]
             self.prefixesList.append(str(addPrefixes[i]))
-            os.system("nfdc route add " + str(addPrefixes[i]) + " udp://" + self.gatewayIP)
+            os.system("nfdc route add " + str(addPrefixes[i]) + " " + self.gatewayFace)
 
         # Send prefixesList to gateway router
         subprocess.call(["python", "interestSender.py", "-u /ndnchat/register", "-p "+interestParams])
