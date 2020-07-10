@@ -114,12 +114,12 @@ Builder.load_string("""
             padding: [10,50,10,50]
             BoxLayout:
                 orientation: "vertical"
-                AsyncImage:
-                    halign: "center"
-                    source: "images/kivyndn.png"
+                #AsyncImage:
+                    #halign: "center"
+                    #source: "images/kivyndn.png"
                 MDLabel:
                     font_name: "kivymd/fonts/FFF_Tusj.ttf"
-                    text: "Welcome to KivyNDN Chat"
+                    text: "Welcome to vICNSNF Chat"
                     halign: "center"
                     font_size: sp(50)
             GridLayout:
