@@ -902,8 +902,8 @@ class ChatScreen(Screen):
         prefix = self.manager.get_screen("welcome_screen").prefix.text
         chatroom = self.manager.get_screen("welcome_screen").chatroom.text
         #subprocess.call(["python", "interestSender.py", "-u /localadvertiser", "-p "+"ndn/broadcast"+prefix+"|"+"ndn/broadcast/"+chatroom+"/chat"])
-		os.system("nlsrc advertise /ndn/broadcast"+prefix)
-		os.system("nlsrc advertise /ndn/broadcast/"+chatroom+"/chat")
+	os.system("nlsrc advertise /ndn/broadcast"+prefix)
+	os.system("nlsrc advertise /ndn/broadcast/"+chatroom+"/chat")
         host = "localhost"
         face = Face(host)
 
