@@ -61,6 +61,8 @@ class Producer(object):
         transport.send(data.wireEncode().toBuffer())
 
         print "Replied to: %s" % interestName.toUri()
+        
+        os.system("nfdc cs erase /ndnchat/register")
 
     def onRegisterFailed(self, prefix):
         print "Register failed for prefix", prefix.toUri()
