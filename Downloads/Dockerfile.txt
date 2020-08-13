@@ -1,0 +1,283 @@
+###############################################################
+## image delete and create
+#  docker rmi -f nfd_winets:16.04
+#  docker build --tag nfd_winets:16.04 -f /root/Dockerfile_nfd .
+#  docker images
+#
+## container delete and run, attach
+#  docker rm -f nfd_test2
+#  docker run --name nfd_test2 -h nfd_test2 --privileged -itd nfd_winets:16.04
+#  docker exec -it nfd_test2 bash
+#
+## ICN-DTN Test
+#
+# icndtn_node_1 <100.100-ndn_net1-100.101> icndtn_node_2 <101.101-ndn_net2-101.102> icndtn_node_3 <102.102-ndn_net3-102.103> icndtn_node_4
+#
+#  docker network create --subnet=172.100.0.0/24 ndn_net1
+#  docker network create --subnet=172.101.0.0/24 ndn_net2
+#  docker network create --subnet=172.102.0.0/24 ndn_net3
+#   
+#  ### NODE1
+#  docker rm -f icndtn_node_1
+#  docker run --name icndtn_node_1 -h icndtn_node_1 --privileged \
+#   --net ndn_net1 --ip 172.100.0.100 \
+#   -e vICSNF_ALIAS='icndtn_node_1' \
+#   -e vICSNF_MGMTIP='127.0.0.1' \
+#   -e vICSNF_MGMTPORT='50051' \
+#   -e vICSNF_SITENAME='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ROUTERNAME='R1' \
+#   -e vICSNF_NEIGHBOR_HOSTNAME='icndtn_node_2' \
+#   -e vICSNF_NEIGHBOR_IP='172.100.0.101' \
+#   -e vICSNF_NEIGHBOR_SITE_ROUTE='korea\\/seoul\\/gangnam#R1' \
+#   -e vICSNF_AD_PREFIXE='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ENV_CHANGE='NO' \
+#   -e vICSNF_IS_START='NO' \
+#   -e vDTN_SUPPORT='YES' \
+#   -e vCONVERGENCE_INTERFACES='lan0' \
+#   -e vCONVERGENCE_LAYER='tcp#eth0' \
+#   -e vDTN_DEFAULT_PREFIX='\\/nfd' \
+#   -itd nfd_winets:16.04 \
+#   /bin/bash -c '/root/start_vicsnf.sh; sleep 30d'
+# 
+#   docker exec -w /root -it icndtn_node_1 bash
+#
+#  ### NODE2
+#  docker rm -f icndtn_node_2
+#  docker create --name icndtn_node_2 -h icndtn_node_2 --privileged \
+#   --net ndn_net1 --ip 172.100.0.101 \
+#   -e vICSNF_ALIAS='icndtn_node_2' \
+#   -e vICSNF_MGMTIP='127.0.0.1' \
+#   -e vICSNF_MGMTPORT='50051' \
+#   -e vICSNF_SITENAME='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ROUTERNAME='R1' \
+#   -e vICSNF_NEIGHBOR_HOSTNAME='icndtn_node_1:icndtn_node_3' \
+#   -e vICSNF_NEIGHBOR_IP='172.100.0.100:172.101.0.102' \
+#   -e vICSNF_NEIGHBOR_SITE_ROUTE='korea\\/seoul\\/gangnam#R1' \
+#   -e vICSNF_AD_PREFIXE='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ENV_CHANGE='NO' \
+#   -e vICSNF_IS_START='NO' \
+#   -e vDTN_SUPPORT='YES' \
+#   -e vCONVERGENCE_INTERFACES='lan0:lan1' \
+#   -e vCONVERGENCE_LAYER='tcp#eth0:tcp#eth1' \
+#   -e vDTN_DEFAULT_PREFIX='\\/nfd' \
+#   -it nfd_winets:16.04 \
+#   /bin/bash -c '/root/start_vicsnf.sh; sleep 30d'
+#
+#   docker network connect ndn_net2 --ip 172.101.0.101 icndtn_node_2 
+#   docker start icndtn_node_2
+#   docker exec -w /root -it icndtn_node_2 bash
+#
+#  ### NODE3
+#  docker rm -f icndtn_node_3
+#  docker create --name icndtn_node_3 -h icndtn_node_3 --privileged \
+#   --net ndn_net2 --ip 172.101.0.102 \
+#   -e vICSNF_ALIAS='icndtn_node_3' \
+#   -e vICSNF_MGMTIP='127.0.0.1' \
+#   -e vICSNF_MGMTPORT='50051' \
+#   -e vICSNF_SITENAME='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ROUTERNAME='R1' \
+#   -e vICSNF_NEIGHBOR_HOSTNAME='icndtn_node_2:icndtn_node_4' \
+#   -e vICSNF_NEIGHBOR_IP='172.101.0.101:172.102.0.103' \
+#   -e vICSNF_NEIGHBOR_SITE_ROUTE='korea\\/seoul\\/gangnam#R1' \
+#   -e vICSNF_AD_PREFIXE='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ENV_CHANGE='NO' \
+#   -e vICSNF_IS_START='NO' \
+#   -e vDTN_SUPPORT='YES' \
+#   -e vCONVERGENCE_INTERFACES='lan0:lan1' \
+#   -e vCONVERGENCE_LAYER='tcp#eth0:tcp#eth1' \
+#   -e vDTN_DEFAULT_PREFIX='\\/nfd' \
+#   -it nfd_winets:16.04 \
+#   /bin/bash -c '/root/start_vicsnf.sh; sleep 30d'
+#
+#   docker network connect ndn_net3 --ip 172.102.0.102 icndtn_node_3 
+#   docker start icndtn_node_3
+#   docker exec -w /root -it icndtn_node_3 bash
+#
+#  ### NODE4
+#  docker rm -f icndtn_node_4
+#  docker run --name icndtn_node_4 -h icndtn_node_4 --privileged \
+#   --net ndn_net3 --ip 172.102.0.103 \
+#   -e vICSNF_ALIAS='icndtn_node_4' \
+#   -e vICSNF_MGMTIP='127.0.0.1' \
+#   -e vICSNF_MGMTPORT='50051' \
+#   -e vICSNF_SITENAME='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ROUTERNAME='R1' \
+#   -e vICSNF_NEIGHBOR_HOSTNAME='icndtn_node_3' \
+#   -e vICSNF_NEIGHBOR_IP='172.102.0.102' \
+#   -e vICSNF_NEIGHBOR_SITE_ROUTE='korea\\/seoul\\/gangnam#R1' \
+#   -e vICSNF_AD_PREFIXE='korea\\/seoul\\/dongjak' \
+#   -e vICSNF_ENV_CHANGE='NO' \
+#   -e vICSNF_IS_START='NO' \
+#   -e vDTN_SUPPORT='YES' \
+#   -e vCONVERGENCE_INTERFACES='lan0' \
+#   -e vCONVERGENCE_LAYER='tcp#eth0' \
+#   -e vDTN_DEFAULT_PREFIX='\\/nfd' \
+#   -itd nfd_winets:16.04 \
+#   /bin/bash -c '/root/start_vicsnf.sh; sleep 30d'
+#
+#   docker exec -w /root -it icndtn_node_4 bash
+#
+## NFD Test for DTN
+#  docker exec -w /root -it icndtn_node_1 bash
+#  ndnpingserver /nfd/dtn/test 
+#
+#  docker exec -w /root -it icndtn_node_4 bash
+#  nfdc face create remote dtn://icndtn_node_1/nfd
+#  nfdc route add prefix /nfd/dtn nexthop dtn://icndtn_node_1/nfd
+#  ndnping /nfd/dtn/test
+#
+## Weave-Scope : http://192.168.11.130:4040
+#
+###############################################################
+FROM ubuntu:16.04
+
+RUN sed -i 's/archive.ubuntu.com/ftp.daumkakao.com/g' /etc/apt/sources.list
+RUN sed -i 's/security.ubuntu.com/ftp.daumkakao.com/g' /etc/apt/sources.list
+
+RUN apt-get update -y && apt-get dist-upgrade -y
+RUN apt-get install -y git vim iputils-ping net-tools iproute2 openssh-server \
+      devscripts build-essential libtool cdbs pkg-config debhelper autotools-dev \
+      libnl-3-dev libnl-genl-3-dev libnl-route-3-dev libnl-nf-3-dev libnl-cli-3-dev libssl-dev \
+      zlib1g-dev libsqlite3-dev libcurl4-openssl-dev libdaemon-dev libvmime-dev libarchive-dev \
+      psmisc libpcap-dev libboost-all-dev python-pip curl git apt-utils \
+      automake autoconf libcppunit-dev libcrypto++-dev liblog4cxx-dev \
+      libprotobuf-dev protobuf-compiler libsystemd-dev libffi-dev vim
+
+RUN python -m pip install --upgrade pip
+RUN python -m pip install futures grpcio protobuf netifaces ifaddr
+
+WORKDIR /root/ndn_dtn_source
+
+RUN mkdir -p /root/logs
+RUN mkdir -p /root/ndn_dtn_source
+
+
+#############
+# download ibrdtn and nfd and relate tool (icn+dtn version)
+RUN git clone https://github.com/red1028/ibrdtn.git
+RUN git clone https://github.com/red1028/ndn-cxx-0.6.5
+RUN git clone https://github.com/red1028/NFD-0.6.5
+
+#############
+# download nlsr
+RUN git clone -b NLSR-0.5.0 https://github.com/named-data/NLSR.git NLSR-0.5.0
+
+#############
+# download sync lib for nlsr (icn+dtn version)
+RUN git clone -b 0.5.2 https://github.com/named-data/ChronoSync.git
+RUN git clone -b 0.1.0 https://github.com/named-data/PSync.git
+RUN git clone https://github.com/red1028/vicsnf-shell.git
+
+#############
+# download ndn-tool for nfd (icn+dtn version)
+RUN git clone -b ndn-tools-0.6.3 https://github.com/named-data/ndn-tools.git ndn-tools-0.6.3
+
+
+#############
+# download pyndn for nfd
+RUN git clone -b v2.10beta1 https://github.com/named-data/PyNDN2.git PyNDN2-0.6.5
+
+
+#############
+# 01. ibrdtn compile
+# 01.1 extract source file
+RUN cd ibrdtn && bash ./ibrdtn-1.0.1.sh
+
+#############
+# 01.2 build ibr-dtn
+RUN cd ibrdtn/ibrcommon-1.0.1 && ./configure --with-openssl && make && make install
+RUN ln -s /usr/local/lib/libibrcommon-1.0.so.1.0.0 /usr/lib/libibrcommon.so && ldconfig
+
+RUN cd ibrdtn/ibrdtn-1.0.1 && ./configure && make && make install
+RUN ln -s /usr/local/lib/libibrdtn-1.0.so.1.0.0 /usr/lib/libibrdtn.so && ldconfig
+
+RUN cd ibrdtn/ibrdtnd-1.0.1 \
+ && sed -i 's/hasSupport(AF_INET6)/hasSupport(AF_INET6) \&\& false/' ./src/api/ApiServer.cpp \
+ && ./configure --with-curl \
+ && make && make install && ldconfig
+
+RUN cd ibrdtn/ibrdtn-tools-1.0.1 && ./configure && make && make install && ldconfig
+
+
+#############
+# 02. build ndn
+# 02.1 build ndn-cxx source file
+RUN cd ndn-cxx-0.6.5 \
+ && ./waf configure --with-examples \
+ && ./waf \
+ && ./waf install \
+ && cp build/examples/consumer /usr/local/bin \
+ && cp build/examples/producer /usr/local/bin \
+ && cp build/examples/consumer-with-timer /usr/local/bin \
+ && ldconfig
+
+#############
+# 02.2 build nfd source file
+WORKDIR /root/ndn_dtn_source/NFD-0.6.5
+RUN mkdir -p websocketpp
+RUN curl -L https://github.com/zaphoyd/websocketpp/archive/0.8.1.tar.gz > websocketpp.tar.gz
+RUN tar xf websocketpp.tar.gz -C websocketpp/ --strip 1
+RUN ./waf configure && ./waf && ./waf install
+RUN sed -i 's/^sudo //' /usr/local/bin/nfd-start
+RUN sed -i 's/\! sudo true/[ "1" == "0" ]/' /usr/local/bin/nfd-start
+RUN sed -i 's/sudo killall nfd/killall -9 nfd/' /usr/local/bin/nfd-stop
+
+WORKDIR /root/ndn_dtn_source
+
+#############
+# 02.3 ChronoSync and PSync build
+RUN cd ChronoSync \
+ && ./waf configure && ./waf && ./waf install \
+ && ldconfig
+ 
+RUN cd PSync \
+ && ./waf configure && ./waf && ./waf install \
+ && ldconfig
+
+
+#############
+# 02.4 NLSR build
+RUN mkdir -p /var/lib/nlsr
+RUN cd NLSR-0.5.0 \
+ && ./waf configure && ./waf && ./waf install
+
+#############
+# 02.5 ndn-tools build
+RUN cd ndn-tools-0.6.3 \
+ && ./waf configure && ./waf && ./waf install
+
+#############
+# 02.6 PyNDN2 build
+RUN cd PyNDN2-0.6.5 \
+ && ./configure \
+ && make && make install && python setup.py install
+
+#############
+# nfd command for grpc
+RUN git clone https://github.com/red1028/nfd-grpc.git  /root/nfd-grpc
+
+
+#############
+# 03. Copy the start shell file and default configure file
+WORKDIR /root/ndn_dtn_source/vicsnf-shell
+RUN cp *.sh /root
+RUN cp ibrdtnd_default.conf /usr/local/etc
+RUN cp nfd_default.conf /usr/local/etc/ndn
+RUN cp nlsr_default.conf /usr/local/etc/ndn
+
+
+############
+# 04. pyndn client
+############
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository ppa:kivy-team/kivy
+RUN apt-get install -y python-kivy libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-mixer-2.0-0 libsdl2-ttf-2.0-0
+RUN easy_install requests
+RUN git clone https://github.com/mipearlska/wifi-kivyndnchat.git /root/wifi-kivyndnchat
+
+
+WORKDIR /
+
+RUN rm -rf /root/ndn_dtn_source
+
+RUN echo 'net.ipv6.conf.all.disable_ipv6=1' >> /etc/sysctl.conf
