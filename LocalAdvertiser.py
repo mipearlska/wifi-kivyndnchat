@@ -30,7 +30,7 @@ class Producer(object):
         # Create a connection to the local forwarder over a Unix socket
         self.gatewayIP = os.popen('ip route | grep default').read().split(" ")[2] #get gateway IP of gateway router
         os.system("ndn-autoconfig") #perform ndn-autoconfig create face to gateway router
-        self.gatewayFace = os.popen('nfdc route list | grep localhost/nfd').read().split(" ")[1][8:]
+        self.gatewayFace = os.popen('nfdc route list | grep localhop/nfd').read().split(" ")[1][8:]
         os.system("nfdc route add /ndnchat/register "+self.gatewayFace)
         face = Face()
 
@@ -57,7 +57,7 @@ class Producer(object):
                     os.system("nfdc face destroy "+self.gatewayFace)
                     print "Changes in network detected, attempt re-advertising prefixes"
                     os.system("ndn-autoconfig")
-                    self.gatewayFace = os.popen('nfdc route list | grep localhost/nfd').read().split(" ")[1][8:]
+                    self.gatewayFace = os.popen('nfdc route list | grep localhop/nfd').read().split(" ")[1][8:]
                     os.system("nfdc route add /ndnchat/register "+self.gatewayFace)
                     concatPrefixesList = ""
                     for i in range (0,len(self.prefixesList)):
