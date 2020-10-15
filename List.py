@@ -453,13 +453,13 @@ class OneLineListItem(BaseListItem):
     '''
     A one line list item
     '''
-    _txt_top_pad = NumericProperty(dp(16))
-    _txt_bot_pad = NumericProperty(dp(15))  # dp(20) - dp(5)
+    _txt_top_pad = NumericProperty(dp(6))
+    _txt_bot_pad = NumericProperty(dp(5))  # dp(20) - dp(5)
     _num_lines = 1
 
     def __init__(self, **kwargs):
         super(OneLineListItem, self).__init__(**kwargs)
-        self.height = dp(48)
+        self.height = dp(28)
 
 
 class TwoLineListItem(BaseListItem):
