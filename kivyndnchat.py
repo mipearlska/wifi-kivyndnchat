@@ -30,7 +30,6 @@ import logging
 import time
 import random
 import select
-import numpy
 import string
 import subprocess
 from pyndn import Name
@@ -119,7 +118,7 @@ Builder.load_string("""
                     #source: "images/kivyndn.png"
                 MDLabel:
                     font_name: "kivymd/fonts/FFF_Tusj.ttf"
-                    text: "Welcome to vICNSNF Chat"
+                    text: "Welcome to KivyNDN Chat"
                     halign: "center"
                     font_size: sp(50)
             GridLayout:
@@ -155,7 +154,7 @@ Builder.load_string("""
 <ChatScreen>:
     GridLayout:
         rows: 2
-        padding: [0,0,0,30]
+        padding: [0,0,0,60]
         spacing: 5
         canvas:
             Color:
@@ -169,13 +168,56 @@ Builder.load_string("""
             md_bg_color: app.theme_cls.primary_color
             background_palette: 'Primary'
             background_hue: '500'
-            elevation: 10
+            # elevation: 10
             right_action_items: [['images/download2.png', lambda x: root.show_downloads()]]
-        ScrollView:
-            do_scroll_x: False
-            scroll_y:0
-            MDList:
-                id: ml
+        GridLayout:
+            padding: [10, 0, 10, 0]
+            cols: 2
+            canvas.before:
+                Color:
+                    rgba: get_color_from_hex("#00ace6")
+                Line:
+                    width: 2
+                    rectangle: self.x+9, self.y, self.width-18, self.height
+            canvas:
+                Color:
+                    rgba: get_color_from_hex("#ffffff")  
+                Rectangle:
+                    pos: self.x +9, self.y
+                    size: self.width-18, self.height
+            ScrollView:
+                canvas.before:
+                    Color:
+                        rgba: get_color_from_hex("#00ace6")
+                    Line:
+                        width: 1.1
+                        rectangle: self.x-2, self.y, self.width+2, self.height
+                do_scroll_x: False
+                scroll_y:0
+                MDList:
+                    id: ml
+            GridLayout:
+                rows:2
+                size_hint: (None, 1.0)
+                width: 106
+                canvas.before:
+                    Color:
+                        rgba: get_color_from_hex("#00ace6")
+                    Line:
+                        width: 1.1
+                        rectangle: self.x, self.y, self.width+2, self.height  
+                MDLabel:
+                    size_hint: (1.0, None)
+                    height: 20
+                    text: "ACTIVE USERS"
+                    halign: "center"
+                    font_size: sp(12)  
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#000000")
+                    bold: True                       
+                MDList:                
+                    id: userlist
+
     BoxLayout:
         size_hint_y: None
         height: 40
@@ -285,13 +327,15 @@ class CustomIconButton(CircularRippleBehavior, ButtonBehavior, Image):
 # Define the Chat class here so that the ChronoChat demo is self-contained.
 class Chat(object):
     def __init__(self, screenName, chatRoom, hubPrefix, face, keyChain,
-      certificateName,messagelist,width,height):
+      certificateName,messagelist,userlist,width,height):
         self._screenName = screenName
         self._chatRoom = chatRoom
         self._face = face
         self._keyChain = keyChain
         self._certificateName = certificateName
         self._messagelist = messagelist
+        self._userlist = userlist
+        self._userdict = {}
         self._width = width
         self._height = height
 
@@ -408,6 +452,9 @@ class Chat(object):
             secondary_text_color=[0,0,1,0.7]))
             # print("Member: " + self._screenName)
             # print(self._screenName + ": Join")
+            item = List.OneLineListItem(text=self._screenName, text_color=[0,0.5,0,1])
+            self._userdict[self._screenName]=item
+            self._userlist.add_widget(item)           
             self._messageCacheAppend(chatbuf_pb2.ChatMessage.JOIN, "xxx", 0)
 
     def _sendInterest(self, syncStates, isRecovery):
@@ -540,6 +587,9 @@ class Chat(object):
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
             secondary_text_color=[1,0,0,0.7]))
+                item = List.OneLineListItem(text=name, text_color=[0,0.5,0,1])
+                self._userdict[name] = item
+                self._userlist.add_widget(item)
                 # print(name + ": Join")
 
             # Set the alive timeout using the Interest timeout mechanism.
@@ -597,7 +647,7 @@ class Chat(object):
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
             secondary_text_color=[1,0,0,0.7]))
-                        # print(name + ": Leave")
+                        self._userlist.remove_widget(self._userdict[name])
                 except ValueError:
                     pass
 
