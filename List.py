@@ -453,6 +453,7 @@ class OneLineListItem(BaseListItem):
     '''
     A one line list item
     '''
+    _txt_left_pad = NumericProperty(dp(10))
     _txt_top_pad = NumericProperty(dp(6))
     _txt_bot_pad = NumericProperty(dp(5))  # dp(20) - dp(5)
     _num_lines = 1
@@ -501,13 +502,13 @@ class OneLineAvatarListItem(ContainerSupport, BaseListItem):
 
 
 class TwoLineAvatarListItem(OneLineAvatarListItem):
-    _txt_top_pad = NumericProperty(dp(20))
-    _txt_bot_pad = NumericProperty(dp(15))  # dp(20) - dp(5)
+    _txt_top_pad = NumericProperty(dp(10))
+    _txt_bot_pad = NumericProperty(dp(5))  # dp(20) - dp(5)
     _num_lines = 2
 
     def __init__(self, **kwargs):
         super(BaseListItem, self).__init__(**kwargs)
-        self.height = dp(72)
+        self.height = dp(52)
 
 
 class ThreeLineAvatarListItem(ContainerSupport, ThreeLineListItem):
