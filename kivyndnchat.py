@@ -405,7 +405,7 @@ class Chat(object):
             size_hint_y=None,
             font_size=(self._height / 23),
             text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7])
+            secondary_text_color=[0,0,0,0.7])
             avatar = self._useravatarlist[self._screenName]
             chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
             self._messagelist.add_widget(chatline)
@@ -475,8 +475,8 @@ class Chat(object):
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),
-            text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7])
+            text_color=[0.6,0.6,0.6,1],
+            secondary_text_color=[0.6,0.6,0.6,0.7])
             avatar = getAvatarName(self._screenName,self._usedavatar)
             if avatar != "zzzz" and avatar not in self._usedavatar: 
                 self._usedavatar.append(avatar)
@@ -618,8 +618,8 @@ class Chat(object):
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
-            font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7])
+            font_size=(self._height / 23),text_color=[0.6,0.6,0.6,1],
+            secondary_text_color=[0.6,0.6,0.6,0.7])
                 avatar = getAvatarName(name,self._usedavatar)
                 if avatar != "zzzz" and avatar not in self._usedavatar: 
                     self._usedavatar.append(avatar)
@@ -653,7 +653,7 @@ class Chat(object):
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7])
+            secondary_text_color=[0,0,0,0.7])
                 avatar = self._useravatarlist[getattr(content, "from")]
                 chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
                 self._messagelist.add_widget(chatline)
@@ -674,7 +674,7 @@ class Chat(object):
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7])
+            secondary_text_color=[0,0,0,0.7])
                 avatar = self._useravatarlist[self._screenName]
                 chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
                 self._messagelist.add_widget(chatline)
@@ -690,8 +690,8 @@ class Chat(object):
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
-            font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7])
+            font_size=(self._height / 23),text_color=[0.6,0.6,0.6,1],
+            secondary_text_color=[0.6,0.6,0.6,0.7])
                         avatar = self._useravatarlist[name]
                         chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
                         self._messagelist.add_widget(chatline)
@@ -757,8 +757,8 @@ class Chat(object):
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
-            font_size=(self._height / 23),text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7])
+            font_size=(self._height / 23),text_color=[0.6,0.6,0.6,1],
+            secondary_text_color=[0.6,0.6,0.6,0.7])
                 avatar = self._useravatarlist[name]
                 chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
                 self._messagelist.add_widget(chatline)
@@ -1208,7 +1208,7 @@ class ImageSelectScreen(Screen):
             text_size=(self.manager.get_screen("main_screen").width,None),
             size_hint_y=None,
             font_size=(self.manager.get_screen("main_screen").height / 23),text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7])
+            secondary_text_color=[0,0,0,0.7])
                     avatar = self._useravatarlist[self.manager.get_screen("welcome_screen").username.text]
                     chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
                     self.manager.get_screen("main_screen").ml.add_widget(chatline)
