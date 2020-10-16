@@ -1,28 +1,3 @@
-# coding=utf-8
-# -*- Mode:python; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
-#
-# Copyright (C) 2014-2019 Regents of the University of California.
-# Author: Jeff Thompson <jefft0@remap.ucla.edu>
-# Derived from ChronoChat-js by Qiuhan Ding and Wentao Shang.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# A copy of the GNU Lesser General Public License is in the file COPYING.
-
-# This include is produced by:
-# protoc --python_out=. chatbuf.proto
-
-
 import chatbuf_pb2
 import threading
 import sys
@@ -52,6 +27,7 @@ Config.set('kivy','exit_on_escape','0')
 from kivy.utils import get_color_from_hex
 import List
 from List import MDList
+from List import ILeftBody
 from label import MDLabel
 from kivymd.theming import ThemeManager
 from kivy.uix.gridlayout import GridLayout
@@ -73,6 +49,7 @@ from os.path import expanduser
 import os
 import requests
 
+letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 kivyndn = ""
 
 path_images = os.getcwd()+"/Pictures"
@@ -85,6 +62,28 @@ def transfercall(prefix,filename):
 
 def downloadcall(prefix,filename):
     subprocess.call(["python", "pipeconsumer.py", "-u"+prefix, "-f"+filename])
+
+def getAvatarName(name,usedavatar):
+    count = 0
+    for i in range(len(usedavatar)):
+        if usedavatar[i].startswith(name[0].upper()):
+            count +=1
+    if count == 5:
+        avatar = "zzzz"
+    else:
+        for i in range (1,5):
+            if name[0].upper() not in letter:
+                avatar = "default"+str(i)
+            else:
+                avatar = name[0].upper()+str(i)
+            if avatar not in usedavatar:
+                break
+    return avatar
+
+
+
+class ContactPhoto(ILeftBody, AsyncImage):
+    pass
 
 # UI configuration
 Builder.load_string("""
@@ -185,17 +184,34 @@ Builder.load_string("""
                 Rectangle:
                     pos: self.x +9, self.y
                     size: self.width-18, self.height
-            ScrollView:
+            GridLayout:
+                rows: 2
                 canvas.before:
                     Color:
                         rgba: get_color_from_hex("#00ace6")
                     Line:
                         width: 1.1
                         rectangle: self.x-2, self.y, self.width+2, self.height
-                do_scroll_x: False
-                scroll_y:0
-                MDList:
-                    id: ml
+                MDLabel:
+                    canvas.before:
+                        Color:
+                            rgba: get_color_from_hex("#00ace6")
+                        Rectangle:
+                            pos: self.x-2, self.y
+                            size: self.width+2, self.height
+                    size_hint: (1.0, None)
+                    height: 20
+                    text: "CHAT MESSAGES"
+                    halign: "center"
+                    font_size: sp(12)  
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#ffffff")
+                    bold: True  
+                ScrollView:
+                    do_scroll_x: False
+                    scroll_y:0
+                    MDList:
+                        id: ml
             GridLayout:
                 rows:2
                 size_hint: (None, 1.0)
@@ -207,6 +223,12 @@ Builder.load_string("""
                         width: 1.1
                         rectangle: self.x, self.y, self.width+2, self.height  
                 MDLabel:
+                    canvas.before:
+                        Color:
+                            rgba: get_color_from_hex("#00ace6")
+                        Line:
+                            width: 1
+                            rectangle: self.x, self.y, self.width+2, self.height  
                     size_hint: (1.0, None)
                     height: 20
                     text: "ACTIVE USERS"
@@ -335,7 +357,9 @@ class Chat(object):
         self._certificateName = certificateName
         self._messagelist = messagelist
         self._userlist = userlist
+        self._useravatarlist = {}
         self._userdict = {}
+        self._usedavatar = []
         self._width = width
         self._height = height
 
@@ -374,14 +398,17 @@ class Chat(object):
             self._sync.publishNextSequenceNo()
             self._messageCacheAppend(chatbuf_pb2.ChatMessage.CHAT, chatMessage, 0)
             # self._messagelist.insert(tk.END,self._screenName + ": " + chatMessage)
-            self._messagelist.add_widget(List.TwoLineListItem(text=chatMessage,
+            chatline = List.TwoLineAvatarListItem(text=chatMessage,
             secondary_text=self._screenName,
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),
             text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7]))
+            secondary_text_color=[0,0,1,0.7])
+            avatar = self._useravatarlist[self._screenName]
+            chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+            self._messagelist.add_widget(chatline)
             # print(self._screenName + ": " + chatMessage)
 
     def sendMultimediaMessage(self, chatMessage, filename):
@@ -442,18 +469,24 @@ class Chat(object):
             self._roster.append(self._userName)
             # self._messagelist.insert(tk.END,"Member: " + self._screenName)
             # self._messagelist.insert(tk.END,self._screenName + ": Join")
-            self._messagelist.add_widget(List.TwoLineListItem(text="Join",
+            chatline = List.TwoLineAvatarListItem(text="Join",
             secondary_text=self._screenName,
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),
             text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7]))
+            secondary_text_color=[0,0,1,0.7])
+            avatar = getAvatarName(self._screenName,self._usedavatar)
+            if avatar != "zzzz" and avatar not in self._usedavatar: 
+                self._usedavatar.append(avatar)
+            chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+            self._messagelist.add_widget(chatline)
             # print("Member: " + self._screenName)
             # print(self._screenName + ": Join")
-            item = List.OneLineListItem(text=self._screenName, text_color=[0,0.5,0,1])
+            item = List.OneLineListItem(text=self._screenName, text_color=[0,0.5,0,1], font_style="Body2")
             self._userdict[self._screenName]=item
+            self._useravatarlist[self._screenName] = avatar
             self._userlist.add_widget(item)           
             self._messageCacheAppend(chatbuf_pb2.ChatMessage.JOIN, "xxx", 0)
 
@@ -580,15 +613,21 @@ class Chat(object):
 
             if l == len(self._roster):
                 self._roster.append(nameAndSession)
-                self._messagelist.add_widget(List.TwoLineListItem(text="Join",
+                chatline = List.TwoLineAvatarListItem(text="Join",
             secondary_text=name,
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7]))
-                item = List.OneLineListItem(text=name, text_color=[0,0.5,0,1])
+            secondary_text_color=[1,0,0,0.7])
+                avatar = getAvatarName(name,self._usedavatar)
+                if avatar != "zzzz" and avatar not in self._usedavatar: 
+                    self._usedavatar.append(avatar)
+                chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+                self._messagelist.add_widget(chatline)
+                item = List.OneLineListItem(text=name, text_color=[0,0.5,0,1], font_style="Body2")
                 self._userdict[name] = item
+                self._useravatarlist[name] = avatar
                 self._userlist.add_widget(item)
                 # print(name + ": Join")
 
@@ -608,13 +647,16 @@ class Chat(object):
             if (content.type == chatbuf_pb2.ChatMessage.CHAT and
                  #not self._isRecoverySyncState and
                  getattr(content, "from") != self._screenName):
-                self._messagelist.add_widget(List.TwoLineListItem(text=content.data,
+                chatline = List.TwoLineAvatarListItem(text=content.data,
             secondary_text=getattr(content, "from"),
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7]))
+            secondary_text_color=[1,0,0,0.7])
+                avatar = self._useravatarlist[getattr(content, "from")]
+                chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+                self._messagelist.add_widget(chatline)
                 # print(getattr(content, "from") + ": " + content.data)
             elif (content.type == chatbuf_pb2.ChatMessage.MEDIA and
                  getattr(content, "from") != self._screenName):
@@ -626,13 +668,16 @@ class Chat(object):
 
                 while downloadProcess.isAlive():
                     x = 0                    
-                self._messagelist.add_widget(List.TwoLineListItem(text="Received file: "+mediafilename + " from " + getattr(content, "from"),
+                chatline = List.TwoLineAvatarListItem(text="Received file: "+mediafilename + " from " + getattr(content, "from"),
             secondary_text=self._screenName,
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7]))
+            secondary_text_color=[1,0,0,0.7])
+                avatar = self._useravatarlist[self._screenName]
+                chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+                self._messagelist.add_widget(chatline)
                 os.system("mv " + mediafilename + " " + path_downloads)
             elif content.type == chatbuf_pb2.ChatMessage.LEAVE:
                 # leave message
@@ -640,14 +685,20 @@ class Chat(object):
                     n = self._roster.index(nameAndSession)
                     if name != self._screenName:
                         self._roster.pop(n)
-                        self._messagelist.add_widget(List.TwoLineListItem(text="Leave",
+                        chatline = List.TwoLineAvatarListItem(text="Leave",
             secondary_text=name,
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[1,0,0,1],
-            secondary_text_color=[1,0,0,0.7]))
+            secondary_text_color=[1,0,0,0.7])
+                        avatar = self._useravatarlist[name]
+                        chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+                        self._messagelist.add_widget(chatline)
                         self._userlist.remove_widget(self._userdict[name])
+                        del self._userdict[name]
+                        del self._useravatarlist[name]
+                        self._usedavatar.remove(avatar)
                 except ValueError:
                     pass
 
@@ -701,13 +752,19 @@ class Chat(object):
         if sequenceNo != -1 and n >= 0:
             if tempSequenceNo == sequenceNo:
                 self._roster.pop(n)
-                self._messagelist.add_widget(List.TwoLineListItem(text="Leave",
+                chatline = List.TwoLineAvatarListItem(text="Leave",
             secondary_text=name,
             markup=True,
             text_size=(self._width,None),
             size_hint_y=None,
             font_size=(self._height / 23),text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7]))
+            secondary_text_color=[0,0,1,0.7])
+                avatar = self._useravatarlist[name]
+                chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+                self._messagelist.add_widget(chatline)
+                self._userlist.remove_widget(self._userdict[name])
+                del self._userdict[name]
+                del self._useravatarlist[name]
                 # print(name + ": Leave")
 
     def _messageCacheAppend(self, messageType, message, finalblockId):
@@ -913,6 +970,7 @@ class ChatScreen(Screen):
         super(ChatScreen,self).__init__(**kwargs)
         Window.bind(on_request_close=self.exit_chat)
         self.ml = self.ids["ml"]
+        self.userlist = self.ids["userlist"]
         self.chat = ''
 
     def exit_chat(self, *args):
@@ -952,8 +1010,8 @@ class ChatScreen(Screen):
         prefix = self.manager.get_screen("welcome_screen").prefix.text
         chatroom = self.manager.get_screen("welcome_screen").chatroom.text
         #subprocess.call(["python", "interestSender.py", "-u /localadvertiser", "-p "+"ndn/broadcast"+prefix+"|"+"ndn/broadcast/"+chatroom+"/chat"])
-	os.system("nlsrc advertise /ndn/broadcast"+prefix)
-	os.system("nlsrc advertise /ndn/broadcast/"+chatroom+"/chat")
+    	os.system("nlsrc advertise /ndn/broadcast"+prefix)
+    	os.system("nlsrc advertise /ndn/broadcast/"+chatroom+"/chat")
         host = "localhost"
         face = Face(host)
 
@@ -967,7 +1025,7 @@ class ChatScreen(Screen):
 
         self.chat = Chat(
           username, chatroom, Name(prefix), face, keyChain,
-          keyChain.getDefaultCertificateName(),self.ml,self.width,self.height)
+          keyChain.getDefaultCertificateName(),self.ml,self.userlist,self.width,self.height)
 
         chat_start(face,self.chat)
 
@@ -1147,13 +1205,16 @@ class ImageSelectScreen(Screen):
                         transferProcess.setDaemon(True)
                         transferProcess.start()
                     sm.current = "main_screen"
-                    self.manager.get_screen("main_screen").ml.add_widget(List.TwoLineListItem(text=temp_img_file+" sent",
+                    chatline = List.TwoLineAvatarListItem(text=temp_img_file+" sent",
             secondary_text=self.manager.get_screen("welcome_screen").username.text,
             markup=True,
             text_size=(self.manager.get_screen("main_screen").width,None),
             size_hint_y=None,
             font_size=(self.manager.get_screen("main_screen").height / 23),text_color=[0,0,1,1],
-            secondary_text_color=[0,0,1,0.7]))
+            secondary_text_color=[0,0,1,0.7])
+                    avatar = self._useravatarlist[self.manager.get_screen("welcome_screen").username.text]
+                    chatline.add_widget(ContactPhoto(source="letteravatar/"+avatar+".png"))
+                    self.manager.get_screen("main_screen").ml.add_widget(chatline)
         except Exception as e:
             print "No file selected"
 class ShowDownloadScreen(Screen):
