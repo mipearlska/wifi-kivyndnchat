@@ -970,6 +970,7 @@ class ChatScreen(Screen):
         super(ChatScreen,self).__init__(**kwargs)
         Window.bind(on_request_close=self.exit_chat)
         self.ml = self.ids["ml"]
+        self.userlist = self.ids["userlist"]
         self.chat = ''
 
     def exit_chat(self, *args):
@@ -1022,7 +1023,7 @@ class ChatScreen(Screen):
 
         self.chat = Chat(
           username, chatroom, Name(prefix), face, keyChain,
-          keyChain.getDefaultCertificateName(),self.ml,self.width,self.height)
+          keyChain.getDefaultCertificateName(),self.ml,self.userlist,self.width,self.height)
 
         chat_start(face,self.chat)
 
