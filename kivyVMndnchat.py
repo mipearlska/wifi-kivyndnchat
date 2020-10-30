@@ -117,7 +117,7 @@ Builder.load_string("""
                     #source: "images/kivyndn.png"
                 MDLabel:
                     font_name: "kivymd/fonts/FFF_Tusj.ttf"
-                    text: "Welcome to KivyNDN Chat"
+                    text: "Welcome to vICSNF chat"
                     halign: "center"
                     font_size: sp(50)
             GridLayout:
