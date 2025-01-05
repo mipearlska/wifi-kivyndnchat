@@ -14049,6 +14049,9 @@ data:
         kubernetes_sd_configs:
           - role: endpoints
         relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_k8s_app]
+            action: keep
+            regex: cilium
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
             action: keep
             regex: true
